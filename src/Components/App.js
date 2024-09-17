@@ -7,12 +7,13 @@ import StartScreen from "./StartScreen";
 import Progress from "./Progress";
 import Questions from "./Questions";
 import NextButton from "./nextButton";
-
+import FinishScreen from "./FinishScreen";
 const initialState = {
   questions: [],
   status: "loading",
   activeQuestion: null,
   answered: null,
+  sumPoints: 0,
 };
 
 const reducer = (state, action) => {
@@ -24,12 +25,25 @@ const reducer = (state, action) => {
     case "start":
       return { ...state, status: "start", activeQuestion: 0 };
     case "answered":
-      return { ...state, answered: action.payload };
+      let correctQuestion = state.questions[state.activeQuestion];
+      let isCorrect = correctQuestion.correctOption === action.payload - 1;
+      return {
+        ...state,
+        answered: action.payload,
+        sumPoints: isCorrect
+          ? state.sumPoints + correctQuestion.points
+          : state.sumPoints,
+      };
     case "nextQuestion":
       return {
         ...state,
         activeQuestion: state.activeQuestion + 1,
         answered: null,
+      };
+    case "goToFinishScreen":
+      return {
+        ...state,
+        status: "finished",
       };
     default:
       throw new Error("Action unknown");
@@ -39,6 +53,10 @@ const reducer = (state, action) => {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const numQuestions = state.questions.length;
+  const maxPoints = state.questions.reduce(
+    (accumulator, question) => accumulator + question.points,
+    0
+  );
   useEffect(() => {
     fetch("http://localhost:9000/questions")
       .then((res) => res.json())
@@ -62,7 +80,13 @@ export default function App() {
         )}
         {state.status === "start" && (
           <>
-            <Progress />
+            <Progress
+              numQuestions={numQuestions}
+              activeQuestion={state.activeQuestion}
+              maxPoints={maxPoints}
+              currentPoints={state.sumPoints}
+              answered={state.answered}
+            />
             <Questions
               questions={state.questions}
               activeQuestion={state.activeQuestion}
@@ -71,7 +95,17 @@ export default function App() {
             />
           </>
         )}
-        <footer>{state.answered && <NextButton dispatch={dispatch} />}</footer>
+        {state.status === "finished" && <FinishScreen />}
+        <footer>
+          {state.answered && (
+            <NextButton
+              dispatch={dispatch}
+              activeQuestion={state.activeQuestion}
+              numQuestions={numQuestions}
+              status={state.status}
+            />
+          )}
+        </footer>
       </Main>
     </div>
   );

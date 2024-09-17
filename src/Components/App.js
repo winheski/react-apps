@@ -8,13 +8,17 @@ import Progress from "./Progress";
 import Questions from "./Questions";
 import NextButton from "./nextButton";
 import FinishScreen from "./FinishScreen";
+import Timer from "./Timer";
 const initialState = {
   questions: [],
   status: "loading",
   activeQuestion: null,
   answered: null,
   sumPoints: 0,
+  totalSeconds: 300,
 };
+
+const URL = "http://localhost:7000/questions"
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -45,6 +49,12 @@ const reducer = (state, action) => {
         ...state,
         status: "finished",
       };
+    case "tick":
+       if(state.totalSeconds === 1) {
+        return{...state, status: "finished"}
+      } else{
+      return {...state, totalSeconds: state.totalSeconds-1};
+    };
     default:
       throw new Error("Action unknown");
   }
@@ -58,7 +68,7 @@ export default function App() {
     0
   );
   useEffect(() => {
-    fetch("http://localhost:9000/questions")
+    fetch(URL)
       .then((res) => res.json())
       .then((data) => {
         dispatch({ type: "dataReceived", payload: data });
@@ -95,16 +105,20 @@ export default function App() {
             />
           </>
         )}
-        {state.status === "finished" && <FinishScreen />}
+        {state.status === "finished" && <FinishScreen sumPoints={state.sumPoints} totalPoints={maxPoints}/>}
         <footer>
           {state.answered && (
+            
             <NextButton
               dispatch={dispatch}
               activeQuestion={state.activeQuestion}
               numQuestions={numQuestions}
               status={state.status}
             />
+            
+            
           )}
+          {state.status === "start" && (<Timer dispatch={dispatch} totalSeconds={state.totalSeconds}/>)}
         </footer>
       </Main>
     </div>

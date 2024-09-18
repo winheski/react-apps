@@ -1,7 +1,6 @@
 import { useEffect } from "react"
 
 export default function Timer({dispatch, totalSeconds}) {
-    console.log("tick");
     let minutes = Math.floor(totalSeconds/60);
     let seconds = (totalSeconds%60);
     useEffect(()=>{

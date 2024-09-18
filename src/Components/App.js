@@ -16,6 +16,7 @@ const initialState = {
   answered: null,
   sumPoints: 0,
   totalSeconds: 300,
+  highscore:0,
 };
 
 const URL = "http://localhost:7000/questions"
@@ -55,6 +56,10 @@ const reducer = (state, action) => {
       } else{
       return {...state, totalSeconds: state.totalSeconds-1};
     };
+    case "restart":
+      return{...initialState, questions: state.questions, status: "ready", highscore: state.highscore};
+    case "setHighscore":
+      return{...state, highscore: state.sumPoints > state.highscore ? state.sumPoints : state.highscore};
     default:
       throw new Error("Action unknown");
   }
@@ -105,7 +110,7 @@ export default function App() {
             />
           </>
         )}
-        {state.status === "finished" && <FinishScreen sumPoints={state.sumPoints} totalPoints={maxPoints}/>}
+        {state.status === "finished" && <FinishScreen sumPoints={state.sumPoints} totalPoints={maxPoints} dispatch={dispatch} highscore={state.highscore}/>}
         <footer>
           {state.answered && (
             
